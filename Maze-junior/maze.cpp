@@ -1,6 +1,6 @@
 /**
- * 迷宫类文件 初版
- * 包含通路求解和迷宫简单的美化输出方法
+ * 迷宫 源文件
+ * 第一版实现（使用了类实现）
  * 
  * 迷宫数据说明：
  * >0 用1表示墙，,2表示暂时不可访问，用作访问标记 其余值保留
@@ -9,10 +9,7 @@
  * 
 */
 
-#pragma once
-#ifndef MAZE
-#define MAZE
-
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -30,20 +27,22 @@ struct position{
     int passable; // （附加字段）指示下一个可通行方向
 };
 
+// 迷宫类
 class Maze{
 private:
+    // 成员数据
     int mazeMatrix[MaxRank][MaxRank] = {0};
     int mazeRank = 0;
     position entrance = {0,0,-2};
     position exit;
     // 存储求解结果, 暂时只可存储一个解
     list<position>solution;
-protected:
+
 public:
     void createMaze(int matrix[][MaxRank], int rank, position entrance, position exit){
         if(rank>MaxRank){
             cout<<"溢出！"<<endl;
-            return NULL;
+            return;
         }
         this->mazeRank = rank;
         for(int i=0;i<rank;i++){
@@ -53,13 +52,13 @@ public:
         }
         this->entrance = entrance;
         this->exit = exit;
-        return this;
+        return;
     }
 
     // 清空`solution`中的答案存储
     void clearAccess(){
         this->solution.clear();
-        return this;
+        return;
     }
 
     // 写入solution中的数据到迷宫map中 以供打印
@@ -67,7 +66,7 @@ public:
         for(auto && i : this->solution){
             this->mazeMatrix[i.row][i.column] = i.passable;
         }
-        return this;
+        return;
     }
 
     // 遍历输出一条可通行的迷宫通路 并 存储供
@@ -90,7 +89,7 @@ public:
                     this->mazeMatrix[res.row][res.column] = 0; // 清除访问标记
                     middleS.pop(); // 退栈
                 }
-                return this;
+                return;
             }
             // 查找current的相邻通路方块
             // 上方
@@ -125,33 +124,7 @@ public:
             }
         }
         cout<<"迷宫无解！"<<endl;
-        return this;
-    }
-
-    // 将通路数据标记到地图中去，调用打印方法即可自动打印
-    void setSolution(){
-        // 遍历链表对象
-        int direction=0; 
-        for(auto && i : this->solution){
-            // 可用于修改不同的数据表示
-            // switch(*iterator.passable){
-            switch(i.passable){
-                case -1:
-                    direction = -1;
-                    break;
-                case -2:
-                    direction = -1;
-                    break;
-                case -3:
-                    direction = -3;
-                    break;
-                default:
-                    direction = -4;
-                    break;
-            };
-            this->mazeMatrix[i.row][i.column] = direction; // 通路标记
-        }
-        return this;
+        return;
     }
 
     // 清除地图数据中的通路标记
@@ -178,7 +151,7 @@ public:
                     this->mazeMatrix[i][j] = 0;
             }
         }
-        return this;
+        return;
     }
 
     // 美化输出迷宫（包含输出通路方法）
@@ -227,7 +200,6 @@ public:
                             cout<<"⊿";
                             break;
                         default:
-                        //     cout<<"←";
                             break;
                     }
                     cout<<"\033[0m"; // 颜色End
@@ -242,7 +214,7 @@ public:
         // 出入口标记还原
         this->mazeMatrix[entrance.row][entrance.column] = 0;
         this->mazeMatrix[exit.row][exit.column] = 0;
-        return this;
+        return;
     }
     
     // 打印迷宫元数据
@@ -254,7 +226,7 @@ public:
             }
             cout<<endl;
         }
-        return this;
+        return;
     }
     
     // 构造函数 and 析构函数
@@ -263,4 +235,31 @@ public:
     }
     ~Maze(){}
 };
-#endif
+
+
+int main(){
+    // 简易6阶迷宫
+    int mazeMatrix[][MaxRank] = {
+        {1, 1, 1, 1, 1, 1},
+        {0, 0, 0, 0, 1, 1},
+        {1, 0, 1, 0, 0, 1},
+        {1, 0, 0, 0, 1, 1},
+        {1, 1, 0, 0, 0, 0},
+        {1, 1, 1, 1, 1, 1},
+    };
+    position entrance = { 1, 0, -2},
+             exit = {4, 5, -2};
+             
+    Maze maze = Maze(mazeMatrix, 6, entrance, exit);
+    
+    maze.printMazeMeta();
+    maze.printMaze(); // 先打印看看结果
+
+    maze.findSolution(); // 查找一条通路
+    maze.setAccess(); // 将结果写到地图数据中
+    maze.clearMapMark(); // 清除访问痕迹数据，和setAccess()方法可以互换
+    maze.printMaze(); // 打印带结果的迷宫地图
+
+    system("pause");
+    return 0;
+}
